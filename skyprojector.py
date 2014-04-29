@@ -29,7 +29,8 @@ def sphereicalProjection( (i,j), k, u ):
 
 def sphericalImageCoordiantes( coords, eta ):
 	v = sphereicalProjection(coords, k, up)
-	return ( math.mod(math.ceil(v[0] * eta), eta), math.ceil(v[1] * eta) )
+	return ( math.mod(math.ceil(v[0] * eta), eta), 
+			 math.ceil(v[1] * eta) )
 
 k = [0,1,0]
 up = [0,0,1]
@@ -38,8 +39,9 @@ print sphereicalProjection([0.1,0.1], k, up)
 
 for i in range(0, width):
 	for j in range(0, height):
-		point = (float(i)/float(width) - 1/2, float(j)/float(width) - 1/2)
-		coords = sphericalImageCoordiantes(point, 200)
+		point = (float(2*i - width)/float(2*width), 
+				 float(2*j - height)/float(2*width))
+		coords = sphericalImageCoordiantes(point, 0.1*width)
 		# print point
 		# print coords
 		color = imageIn.getpixel(coords)
