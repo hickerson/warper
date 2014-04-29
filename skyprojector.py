@@ -38,7 +38,9 @@ print sphereicalProjection([0.1,0.1], k, up)
 
 for i in range(0, width):
 	for j in range(0, height):
-		imageOut.putpixel((i,j),(255*i*j/width/height,0,0))
+		color = imageIn.getpixel((i,j))
+		imageOut.putpixel((i,j),color)
+		# imageOut.putpixel((i,j),(255*i*j/width/height,0,0))
 
 
 # draw = ImageDraw.Draw(im)
