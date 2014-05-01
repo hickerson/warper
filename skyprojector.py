@@ -6,6 +6,7 @@ import numpy as math
  
 width = 1280
 height = 720
+fov = math.pi
 filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-hd.jpg"
 imageIn = Image.open(filename) # load an image from the hard drive
 imageOut = Image.new("RGB", (width, height))
@@ -30,7 +31,7 @@ def sphereicalProjection( (i,j), k, u ):
 def sphericalImageCoordiantes( coords, eta ):
 	v = sphereicalProjection(coords, k, up)
 	return ( math.mod(math.ceil(v[0] * eta), eta), 
-			 math.ceil(v[1] * eta) )
+			 math.mod(math.ceil(v[1] * eta), eta) )
 
 k = [0,1,0]
 up = [0,0,1]
@@ -39,9 +40,9 @@ print sphereicalProjection([0.1,0.1], k, up)
 
 for i in range(0, width):
 	for j in range(0, height):
-		point = (float(2*i - width)/float(2*width), 
-				 float(2*j - height)/float(2*width))
-		coords = sphericalImageCoordiantes(point, 0.1*width)
+		point = (float(2*i - width) * fov / float(width), 
+				 float(2*j - height) * fov / float(width))
+		coords = sphericalImageCoordiantes(point, width)
 		# print point
 		# print coords
 		color = imageIn.getpixel(coords)
