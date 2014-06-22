@@ -6,10 +6,11 @@ import numpy as math
  
 width = 1280
 height = 720
-fov = math.pi/4
-filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-hd.jpg"
+wrap = 2
+filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-enhanced.png"
 imageIn = Image.open(filename) # load an image from the hard drive
 imageOut = Image.new("RGB", (width, height))
+
 
 def projectVector( k, u ):
 	"projects a vector"
@@ -18,8 +19,9 @@ def projectVector( k, u ):
 	M = math.vstack([ x/la.norm(x), y/la.norm(y), k/la.norm(k) ])
 	return M
 
+
 def sphereicalProjection( (i,j), k, u ):
-	"Projects a vector on to spherical coordinates."
+	"Projects a vector onto spherical coordinates."
 	R = projectVector(k,up)
 	M = R[2] + i*R[0] + j*R[1]
 	x, y, z = M[0], M[1], M[2]
@@ -28,13 +30,17 @@ def sphereicalProjection( (i,j), k, u ):
 	theta = math.arccos(z / r)
 	return (phi, theta)
 
-def sphericalImageCoordiantes( coords, eta ):
-	v = sphereicalProjection(coords, k, up)
-	return ( math.mod(math.ceil(v[0] * eta), eta), 
-			 math.mod(math.ceil(v[1] * eta), eta) )
 
-k = [0,1,0]
+def sphericalImageCoordiantes( coords, size ):
+	v = sphereicalProjection(coords, k, up)
+	point = ( math.mod(math.floor(wrap*v[0]*size[0]/2/math.pi), size[0]), 
+			  math.mod(math.floor(wrap*v[1]*size[1]/math.pi), size[1]) )
+	return point
+
+
+k = [2,-3,1]
 up = [0,0,1]
+fov = 0.8
 print projectVector(k,up)[1]
 print sphereicalProjection([0.1,0.1], k, up)
 
@@ -42,9 +48,7 @@ for i in range(0, width):
 	for j in range(0, height):
 		point = (float(2*i - width) * fov / float(width), 
 				 float(2*j - height) * fov / float(width))
-		coords = sphericalImageCoordiantes(point, width)
-		# print point
-		# print coords
+		coords = sphericalImageCoordiantes(point, imageIn.size)
 		color = imageIn.getpixel(coords)
 		imageOut.putpixel((i,j), color)
 
