@@ -3,13 +3,31 @@
 from PIL import Image, ImageDraw
 from numpy import linalg as la
 import numpy as math
- 
-width = 1280
-height = 720
-wrap = 2
+
+# background galaxies 
+width = 1280/2
+height = 720/2
+wrap = 3
 filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-enhanced.png"
-imageIn = Image.open(filename) # load an image from the hard drive
-imageOut = Image.new("RGB", (width, height))
+
+
+# view options
+k = [2,-5,-1]
+up = [0,0,1]
+fov = 0.8
+
+
+# foreground lensing
+mdm = 100
+vdm = [2,-5,-1]
+zdm = 0.5
+
+
+def angleToDarkMatter(v):
+	ndm = vdm / math.norm(vdm)
+	theta = math.acos(math.dot(v,vdm))
+	print rv
+	return rv
 
 
 def projectVector( k, u ):
@@ -38,11 +56,11 @@ def sphericalImageCoordiantes( coords, size ):
 	return point
 
 
-k = [2,-3,1]
-up = [0,0,1]
-fov = 0.8
 print projectVector(k,up)[1]
 print sphereicalProjection([0.1,0.1], k, up)
+
+imageIn = Image.open(filename) 
+imageOut = Image.new("RGB", (width, height))
 
 for i in range(0, width):
 	for j in range(0, height):
