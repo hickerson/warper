@@ -1,11 +1,73 @@
 #!/usr/bin/python
 
+
 from PIL import Image, ImageDraw
 from numpy import linalg as la
 from numpy.linalg import norm
 
 from numpy import mod, floor, dot, cross, array, eye, pi, linalg, vstack, arccos, arctan2
-from math import cos, sin, sqrt, acos, asin
+from math import cos, sin, sqrt, acos, asin, exp
+import sys, getopt
+
+
+def usage(): 
+	print "usage: ", sys.argv[0], " <frame[s]> [<start> [<stop> [<step>]]]"
+	print "  <frame[s]>   If only this argument is given, "
+	print "               the is the fractional frame number in 0...1."
+	print "               If there are more arguments, then frames is "
+	print "               total number of frames of the whole animation."
+	print "  <start>      Number of the first from to render."
+	print "  <stop>       Number of the last from to render up."
+	print "  <step>       Number of frames to skip, if stop is specified."
+	exit()
+	
+argc = len(sys.argv)
+time = 0
+start = 0
+stop = 0
+step = 1
+
+if argc < 2:
+	usage()
+
+if argc >= 2:
+	frames = 1
+	time = float(sys.argv[1])
+
+if argc >= 3:
+	frames = int(sys.argv[1])
+	start = int(sys.argv[2])
+
+if argc >= 4:
+	stop = int(sys.argv[3])
+
+if argc >= 5:
+	step = int(sys.argv[4])
+
+
+# output options
+width = 1280
+height = 720
+outpath = "/home/kevinh/Videos/darkmatter/frames"
+
+
+# background options 
+wrap = 3
+filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-enhanced.png"
+background = Image.open(filename) 
+
+
+# view options
+povs = array([[15,3,2],[15,-3,-2]])
+ups = array([[0,0,1],[0,0,1]])
+fov = 0.7
+
+
+# foreground lensing
+Mdm = 0.04
+Rdm = 0.25
+vdms = array([[15,4,-7],[10,-4,7]])
+
 
 """
 #import numpy.random as nr
@@ -51,7 +113,6 @@ def rotationMatrix(axis, theta):
 		axis = axis / n
 	a = cos(theta/2.)
 	b, c, d = -axis*sin(theta/2.)
-	#print a ,b, c, d
 	return array([
 		[a*a+b*b-c*c-d*d, 2*(b*c-a*d), 	 	2*(b*d+a*c)],
 		[2*(b*c+a*d), 	  a*a+c*c-b*b-d*d,	2*(c*d-a*b)],
@@ -59,57 +120,42 @@ def rotationMatrix(axis, theta):
 	])
 
 
-# background galaxies 
-width = 1280/2
-height = 720/2
-wrap = 3
-filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-enhanced.png"
+# TODO add unlimited control points
+def interpolate(frame, M):
+	return frame * M[0] + (1 - frame) * M[1]
+	
 
-
-# view options
-pov = array([2,-5,-1])
-up = array([0,0,1])
-fov = 0.8
-
-
-# foreground lensing
-mdm = 0.1
-vdm = array([2,-6,-1])
-zdm = 0.5
-ndm = vdm / norm(vdm)
-
-
-def deflectDarkMatter(ray,vdm):
+def deflectDarkMatter(ray,vdm,Mdm):
 	"returns the deflected ray"
 	r = norm(ray)
-	d = norm(vdm)
+	b = norm(vdm)
 	if r > 0:
 		ray /= r
-		vdm /= d
+		vdm /= b
 		theta = arccos(dot(ray,vdm))
+		x = theta / b
 	else:
-		theta = 0
-	axis = cross(ray,ndm)
-	phi = - mdm / d / theta
+		x = 0
+	axis = cross(ray,vdm)
+	phi = - Mdm * x / (x**2 + Rdm**2)
 	R = rotationMatrix(axis,phi)
 	u = dot(R,ray)
 	return u
 
 
-def projectionMatrix( k, u ):
-	"projects a vector"
-	x = cross(k,u)
+def orthagonalMatrix( k, up ):
+	"creates an orthogonal matrix from two vectors"
+	x = cross(k,up)
 	y = cross(x,k)
 	M = vstack([ x/norm(x), y/norm(y), k/norm(k) ])
 	return M
 
 
-def orthographicProjection( (i,j), k, u ):
-	M = projectionMatrix(k,up)
+def orthographicProjection( (i,j), k, up ):
+	"orthogonal projection from a ray, up and pixel values"
+	M = orthagonalMatrix(k,up)
 	v = M[2] + i*M[0] + j*M[1]
 	return v
-	#M = R[2] + i*R[0] + j*R[1]
-	#return array([M[0], M[1], M[2]])
 
 
 def sphereicalProjection( u ):
@@ -126,28 +172,34 @@ def sphericalImageCoordiantes( angles, size ):
 	return pixel
 
 
-print projectionMatrix(pov,up)[1]
-#print sphereicalProjection([0.1,0.1], pov, up)
-#print deflectDarkMatter(pov,pov,ndm)
+def render(time):
+	pov = interpolate(time, povs)
+	up = interpolate(time, ups)
+	vdm = interpolate(time, vdms)
+	image = Image.new("RGB", (width, height))
+	for i in range(0, width):
+		for j in range(0, height):
+			ray = (float(2*i - width) * fov / float(width), 
+				   float(2*j - height) * fov / float(width))
+			coords = orthographicProjection( ray, pov, up )
+			coords = deflectDarkMatter( coords, vdm, Mdm )
+			angles = sphereicalProjection( coords )
+			pixel = sphericalImageCoordiantes( angles, background.size )
+			color = background.getpixel(pixel)
+			image.putpixel((i,j), color)
+	out = outpath + "/frame" + format(frame,'06') + ".png"
+	print "Saving to " + out
+	#image.show()
+	image.save(out, "PNG")
 
 
-imageIn = Image.open(filename) 
-imageOut = Image.new("RGB", (width, height))
+if start == stop:
+	render(time)
+else:
+	for frame in range(start, stop, step):
+		time = float(frame)/float(frames)
+		render(time)
 
-
-for i in range(0, width):
-	for j in range(0, height):
-		ray = (float(2*i - width) * fov / float(width), 
-			   float(2*j - height) * fov / float(width))
-		coords = orthographicProjection( ray, pov, up )
-		coords = deflectDarkMatter( coords, ndm )
-		angles = sphereicalProjection( coords )
-		pixel = sphericalImageCoordiantes( angles, imageIn.size )
-		color = imageIn.getpixel(pixel)
-		imageOut.putpixel((i,j), color)
-
-
-imageOut.show()
 
 # write to stdout
 # im.save(sys.stdout, "PNG")
