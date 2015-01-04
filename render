@@ -1,0 +1,11 @@
+#!/bin/sh
+
+python darkmatterwarper.py 480 0 60 &
+python darkmatterwarper.py 480 60 120 &
+python darkmatterwarper.py 480 60 120 &
+python darkmatterwarper.py 480 120 180 &
+python darkmatterwarper.py 480 180 240 &
+python darkmatterwarper.py 480 240 300 &
+python darkmatterwarper.py 480 300 360 &
+python darkmatterwarper.py 480 360 420 &
+python darkmatterwarper.py 480 420 480 &
