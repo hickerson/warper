@@ -53,7 +53,7 @@ outpath = "/home/kevinh/Videos/darkmatter/frames"
 
 # background options 
 wrap = 3
-filename = "/home/kevinh/Videos/Spiral Galaxy/images/12billionyears-enhanced.png"
+filename = "12billionyears-enhanced.png"
 background = Image.open(filename) 
 
 
