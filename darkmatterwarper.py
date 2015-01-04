@@ -64,8 +64,8 @@ fov = 0.7
 
 
 # foreground lensing
-Mdm = 0.04
-Rdm = 0.25
+Mdm = 0.12
+Rdm = 0.28
 vdms = array([[15,4,-7],[10,-4,7]])
 
 
